@@ -1,1 +1,85 @@
-print("hI")
+import sys
+import requests
+import time
+
+# Colores ANSI universales
+class Colors:
+    RESET = "\033[0m"
+    RED = "\033[31m"
+    GREEN = "\033[32m"
+    YELLOW = "\033[33m"
+    CYAN = "\033[36m"
+
+def colored(text, color):
+    return f"{color}{text}{Colors.RESET}"
+
+# Welcome message
+print(colored("Welcome to Webhook Raider made by Rayan - version v1", Colors.GREEN))
+
+def get_user_input(prompt, color=Colors.CYAN):
+    return input(colored(prompt, color)).strip()
+
+def send_message(webhook_url, message, num_messages):
+    data = {"content": message}
+    for i in range(1, num_messages + 1):
+        try:
+            response = requests.post(webhook_url, json=data)
+            
+            if response.status_code == 204:
+                print(colored(f"Message {i} sent successfully ✅", Colors.GREEN))
+            
+            elif response.status_code == 404:
+                print(colored("Invalid webhook URL ❌", Colors.RED))
+                break
+            
+            elif response.status_code == 429:
+                try:
+                    retry_after = response.json().get("retry_after", 1) / 1000
+                except Exception:
+                    retry_after = 1
+                print(colored(f"Rate limit reached. Waiting {retry_after:.2f}s...", Colors.YELLOW))
+                time.sleep(retry_after)
+                i -= 1  
+            
+            else:
+                print(colored(f"Failed to send message {i}. Status code: {response.status_code}", Colors.RED))
+                break
+
+        except requests.exceptions.RequestException as e:
+            print(colored(f"An error occurred while sending message {i}: {e}", Colors.RED))
+            break
+
+def main():
+    webhook_url = get_user_input("Enter the webhook URL: ")
+    message = get_user_input("Enter the message to send: ")
+    num_messages = get_user_input("How many messages do you want to send? ")
+
+    try:
+        num_messages = int(num_messages)
+        if num_messages < 1:
+            raise ValueError("Number of messages must be a positive integer.")
+    except ValueError as e:
+        print(colored(f"Invalid input: {e}", Colors.RED))
+        sys.exit(1)
+
+    if num_messages == 999:
+        print(colored("Spam mode activated! Sending 999 messages...", Colors.RED))
+    else:
+        print(colored(f"Sending {num_messages} messages...", Colors.YELLOW))
+
+    send_message(webhook_url, message, num_messages)
+
+    while True:
+        try:
+            input(colored("Press Enter to exit...", Colors.YELLOW))
+            break
+        except KeyboardInterrupt:
+            print(colored("\nDo you really want to exit? (yes/no)", Colors.YELLOW))
+            choice = input().strip().lower()
+            if choice == 'yes':
+                break
+            else:
+                print(colored("Continuing execution...", Colors.YELLOW))
+
+if __name__ == "__main__":
+    main()
