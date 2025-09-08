@@ -1,8 +1,12 @@
 import sys
 import requests
 import time
+import ctypes
 
-# Colores ANSI universales
+# Show Windows popup
+ctypes.windll.user32.MessageBoxW(0, "Welcome to Polara\nversion v1.2", "polara", 0)
+
+# ANSI Colors
 class Colors:
     RESET = "\033[0m"
     RED = "\033[31m"
@@ -13,8 +17,8 @@ class Colors:
 def colored(text, color):
     return f"{color}{text}{Colors.RESET}"
 
-# Welcome message
-print(colored("Welcome to Webhook Raider made by Rayan - version v1", Colors.GREEN))
+# Console Welcome
+print(colored("Welcome to Polara Webhook Raider made by Rayan", Colors.GREEN))
 
 def get_user_input(prompt, color=Colors.CYAN):
     return input(colored(prompt, color)).strip()
@@ -39,7 +43,7 @@ def send_message(webhook_url, message, num_messages):
                     retry_after = 1
                 print(colored(f"Rate limit reached. Waiting {retry_after:.2f}s...", Colors.YELLOW))
                 time.sleep(retry_after)
-                i -= 1  
+                i -= 1  # retry same message
             
             else:
                 print(colored(f"Failed to send message {i}. Status code: {response.status_code}", Colors.RED))
